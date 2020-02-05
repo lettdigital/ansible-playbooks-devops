@@ -1,0 +1,28 @@
+---
+- name: get Amazon Linux Version
+  shell: cat /etc/system-release
+  register: amazon_version
+
+- set_fact:
+    amazon_version: "{{ amazon_version.stdout }}"
+
+- set_fact:
+    amazon_rhel_equivalent: "{{'7' if 'Amazon Linux release 2' in amazon_version else '6'}}"
+
+- name: add zabbix repo (yum repository)
+  yum_repository:
+    name: zabbix
+    description: Official Zabbix Repository
+    baseurl: "http://repo.zabbix.com/zabbix/{{ zabbix_major_version }}/rhel/{{ amazon_rhel_equivalent }}/x86_64/"
+    state: present
+
+- name: add zabbix repo (rpm gpg key)
+  rpm_key:
+    key: https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591-EL5
+    state: present
+
+- name: install zabbix-agent (yum)
+  yum:
+    update_cache: true
+    name: zabbix-agent
+    state: present

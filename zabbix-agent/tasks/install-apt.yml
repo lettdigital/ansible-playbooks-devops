@@ -1,0 +1,25 @@
+---
+- name: get ubuntu codename
+  shell: lsb_release -c | sed -n -r 's/^Codename:\s+(.*)$/\1/p'
+  register: ubuntu_codename
+
+- set_fact:
+    ubuntu_codename: "{{ ubuntu_codename.stdout }}"
+
+- name: add zabbix repository
+  shell: |
+    set -e
+
+    ZABBIX_RELEASE_DEB="$(curl --silent https://repo.zabbix.com/zabbix/{{ zabbix_major_version }}/ubuntu/pool/main/z/zabbix-release/ \
+      | grep {{ ubuntu_codename }}_all \
+      | sed -n -r 's/^.*>(.*)<.*$/\1/p')"
+
+    wget https://repo.zabbix.com/zabbix/{{ zabbix_major_version }}/ubuntu/pool/main/z/zabbix-release/$ZABBIX_RELEASE_DEB
+    dpkg -i $ZABBIX_RELEASE_DEB
+    apt-get update
+
+- name: install zabbix-agent (apt)
+  become: yes
+  apt:
+    name: zabbix-agent
+    state: present

@@ -1,0 +1,54 @@
+---
+- name: get current hostname
+  command: hostname
+  register: current_hostname
+
+- set_fact:
+    current_hostname: "{{ current_hostname.stdout }}"
+
+- name: get system information
+  command: uname -a
+  register: sys_info
+
+- set_fact:
+    sys_info: "{{ sys_info.stdout }}"
+
+- set_fact:
+    pkg_mgr: |-
+      {%- if "Ubuntu" in sys_info -%}
+        apt
+      {%- elif "amzn" in sys_info -%}
+        yum
+      {%- else -%}
+        unknown
+      {%- endif -%}
+
+- name: get instance-id
+  uri:
+    url: http://169.254.169.254/latest/meta-data/instance-id
+    return_content: yes
+  register: instance_id
+
+- name: get private-ip
+  uri:
+    url: http://169.254.169.254/latest/meta-data/local-ipv4
+    return_content: yes
+  register: private_ip
+
+- set_fact:
+    instance_id: "{{ instance_id.content }}"
+    private_ip: "{{ private_ip.content }}"
+
+- name: get instance Name tag
+  become: false
+  shell: |
+    aws ec2 describe-instances \
+      --instance-id {{ instance_id }} \
+      --query "Reservations[*].Instances[*].Tags[?Key=='Name'].Value" \
+      --region us-east-1 --output text
+  delegate_to: localhost
+  register: instance_name
+
+- set_fact:
+    instance_name: "{{ instance_name.stdout }}"
+
