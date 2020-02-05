@@ -33,7 +33,7 @@ ansible -v $HOST_PRIVATE_IP -i $HOST_PRIVATE_IP, \
 ## Multiple hosts
 
 ```shell script
-python install_on_all_ec2.py
+pipenv run python install_on_all_ec2.py
 ```
 
 It will ignore all ec2 created by beanstalk environments.

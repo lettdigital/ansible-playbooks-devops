@@ -13,7 +13,7 @@
   yum_repository:
     name: zabbix
     description: Official Zabbix Repository
-    baseurl: "http://repo.zabbix.com/zabbix/4.4/rhel/{{ amazon_rhel_equivalent }}/x86_64/"
+    baseurl: "http://repo.zabbix.com/zabbix/{{ zabbix_major_version }}/rhel/{{ amazon_rhel_equivalent }}/x86_64/"
     state: present
 
 - name: add zabbix repo (rpm gpg key)
