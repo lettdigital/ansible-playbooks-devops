@@ -91,7 +91,7 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
             """,
         shell=True,
         check=True,
-        cwd=os.path.join(os.getcwd(), "..")
+        cwd=os.path.join(os.path.realpath(__file__), "..")
     )
 
 
