@@ -6,6 +6,11 @@
 - name: restart zabbix agent
   shell: |
     set -e
+
+    sudo mkdir -p /var/log/zabbix
+    sudo touch /var/log/zabbix/zabbix_agentd.log
+    sudo chown -R zabbix:zabbix /var/log/zabbix
+
     if [[ -f /etc/init.d/zabbix-agent ]];
     then
       /etc/init.d/zabbix-agent restart
