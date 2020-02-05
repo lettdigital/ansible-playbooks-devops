@@ -7,9 +7,9 @@
   shell: |
     set -e
 
-    sudo mkdir -p /var/log/zabbix
+    sudo mkdir -p /var/log/zabbix /etc/zabbix/zabbix_agentd.d
     sudo touch /var/log/zabbix/zabbix_agentd.log
-    sudo chown -R zabbix:zabbix /var/log/zabbix
+    sudo chown -R zabbix:zabbix /var/log/zabbix /etc/zabbix/zabbix_agentd.d
 
     if [[ -f /etc/init.d/zabbix-agent ]];
     then
