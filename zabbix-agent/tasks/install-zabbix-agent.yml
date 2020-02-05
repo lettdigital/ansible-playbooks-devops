@@ -1,0 +1,9 @@
+---
+- name: assert supported distribution
+  assert:
+    that:
+      - "pkg_mgr in ('apt', 'yum')"
+    fail_msg: "pkg_mgr must be one of ('apt', 'yum')"
+
+- name: 'install {{ pkg_mgr }}'
+  include_tasks: 'install-{{ pkg_mgr }}.yml'
