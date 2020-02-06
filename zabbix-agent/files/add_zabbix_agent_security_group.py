@@ -1,6 +1,13 @@
 import sys
+import os
 
 import boto3
+
+zabbix_agent_security_group_names = {
+    "production": os.environ.get("ZABBIX_AGENT_SG_NAME_PROD"),
+    "development": os.environ.get("ZABBIX_AGENT_SG_NAME_DEV")
+}
+production_vpc_name = os.environ.get("PRODUCTION_VPC_NAME")
 
 ec2_client = boto3.client("ec2")
 ec2_resource = boto3.resource("ec2")
@@ -23,9 +30,9 @@ def get_security_ids_to_add_to_instance(instance_info,
                                         instance_security_group_ids,
                                         security_group_ids_by_name,
                                         vpc_names_by_id):
-    zabbix_security_group_to_add = (security_group_ids_by_name["zabbix-agent"]
-                                    if vpc_names_by_id[instance_info["VpcId"]] == "lett-prod"
-                                    else security_group_ids_by_name["zabbix-agent-dev"])
+    zabbix_security_group_to_add = (security_group_ids_by_name[zabbix_agent_security_group_names["production"]]
+                                    if vpc_names_by_id[instance_info["VpcId"]] == production_vpc_name
+                                    else security_group_ids_by_name[zabbix_agent_security_group_names["development"]])
     security_group_ids_to_add = {*instance_security_group_ids,
                                  zabbix_security_group_to_add}
     return security_group_ids_to_add
