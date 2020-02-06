@@ -1,16 +1,27 @@
 - name: deploy zabbix-agent config
-  copy:
-    src: "{{ role_path }}/files/zabbix_agentd.conf"
+  template:
+    src: "{{ role_path }}/files/zabbix_agentd.conf.j2"
     dest: /etc/zabbix/zabbix_agentd.conf
+    owner: zabbix
+  vars:
+    zabbix_server: "{{ lookup('env', 'ZABBIX_SERVER') | regex_replace('^https://(.*)$', '\\1') }}"
+
+- name: create zabbix log dir
+  file:
+    path: /var/log/zabbix/zabbix_agentd.log
+    owner: zabbix
+    group: zabbix
+
+- name: create zabbix-agent agentd.d dir
+  file:
+    path: /etc/zabbix/zabbix_agentd.d
+    owner: zabbix
+    group: zabbix
+    state: directory
 
 - name: restart zabbix agent
   shell: |
     set -e
-
-    sudo mkdir -p /var/log/zabbix /etc/zabbix/zabbix_agentd.d
-    sudo touch /var/log/zabbix/zabbix_agentd.log
-    sudo chown -R zabbix:zabbix /var/log/zabbix /etc/zabbix/zabbix_agentd.d
-
     if [[ -f /etc/init.d/zabbix-agent ]];
     then
       /etc/init.d/zabbix-agent restart

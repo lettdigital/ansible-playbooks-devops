@@ -9,9 +9,11 @@ from pyzabbix import ZabbixAPI
 
 ec2_client = boto3.client("ec2")
 s3_client = boto3.client("s3")
+ssl_keys_directory = os.environ.get("SSL_KEYS_DIRECTORY", "/tmp/keys")
+ssl_keys_bucket = os.environ["SSL_KEYS_BUCKET"]
 zapi = ZabbixAPI(url=os.environ.get("ZABBIX_SERVER", "https://localhost"),
-                 user=os.environ.get("ZABBIX_AUTOMATION_USER"),
-                 password=os.environ.get("ZABBIX_AUTOMATION_PASSWORD"))
+                 user=os.environ["ZABBIX_AUTOMATION_USER"],
+                 password=os.environ["ZABBIX_AUTOMATION_PASSWORD"])
 
 
 def main():
@@ -96,10 +98,9 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
 
 
 def get_ssl_keys():
-    ssl_keys_directory = "/tmp/ssl-keys"
     os.makedirs(ssl_keys_directory, exist_ok=True)
     print("getting ssl keys...")
-    subprocess.run(f"aws s3 sync s3://lett-ssh-keys {ssl_keys_directory}",
+    subprocess.run(f"aws s3 sync s3://{ssl_keys_bucket} {ssl_keys_directory}",
                    shell=True,
                    check=True)
     subprocess.run(f"chmod 600 {os.path.join(ssl_keys_directory, '*')}",
@@ -124,8 +125,9 @@ def get_instances_to_run(reservations, success_ec2_ids, update_all):
 
 def should_run_on_instance(instance, success_ec2_ids, update_all):
     ec2_is_beanstalk = get_instance_tag(instance, "elasticbeanstalk:environment-name") is not None
+    disable_zabbix_agent_installation = get_instance_tag(instance, "disable_zabbix_agent_installation") == "true"
 
-    return (not ec2_is_beanstalk
+    return ((not ec2_is_beanstalk and not disable_zabbix_agent_installation)
             and (update_all or instance["InstanceId"] not in success_ec2_ids))
 
 
