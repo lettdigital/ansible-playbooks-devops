@@ -1,4 +1,4 @@
-Role Name
+zabbix-agent
 =========
 
 Installs zabbix agent on host and configures the EC2 seucrity group so it is
