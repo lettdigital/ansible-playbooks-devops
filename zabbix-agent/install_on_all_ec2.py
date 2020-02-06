@@ -124,8 +124,9 @@ def get_instances_to_run(reservations, success_ec2_ids, update_all):
 
 def should_run_on_instance(instance, success_ec2_ids, update_all):
     ec2_is_beanstalk = get_instance_tag(instance, "elasticbeanstalk:environment-name") is not None
+    disable_zabbix_agent_installation = get_instance_tag(instance, "disable_zabbix_agent_installation") == "true"
 
-    return (not ec2_is_beanstalk
+    return ((not ec2_is_beanstalk and not disable_zabbix_agent_installation)
             and (update_all or instance["InstanceId"] not in success_ec2_ids))
 
 
