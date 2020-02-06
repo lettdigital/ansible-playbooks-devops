@@ -113,7 +113,8 @@ def get_instances_to_run(reservations, success_ec2_ids, update_all):
     print("getting instances to run...")
     instances = (instance
                  for reservation in reservations
-                 for instance in reservation["Instances"])
+                 for instance in reservation["Instances"]
+                 if instance["State"]["Name"] == "running")
     instances_to_run = [{"key_pair": instance["KeyName"],
                          "id": instance["InstanceId"],
                          "name": get_instance_tag(instance, "Name"),
