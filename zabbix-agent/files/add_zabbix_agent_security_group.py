@@ -4,10 +4,10 @@ import os
 import boto3
 
 zabbix_agent_security_group_names = {
-    "production": os.environ.get("ZABBIX_AGENT_SG_NAME_PROD"),
-    "development": os.environ.get("ZABBIX_AGENT_SG_NAME_DEV")
+    "production": os.environ["ZABBIX_AGENT_SG_NAME_PROD"],
+    "development": os.environ["ZABBIX_AGENT_SG_NAME_DEV"]
 }
-production_vpc_name = os.environ.get("PRODUCTION_VPC_NAME")
+production_vpc_name = os.environ["PRODUCTION_VPC_NAME"]
 
 ec2_client = boto3.client("ec2")
 ec2_resource = boto3.resource("ec2")

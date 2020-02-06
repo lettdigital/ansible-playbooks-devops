@@ -10,10 +10,10 @@ from pyzabbix import ZabbixAPI
 ec2_client = boto3.client("ec2")
 s3_client = boto3.client("s3")
 ssl_keys_directory = os.environ.get("SSL_KEYS_DIRECTORY", "/tmp/keys")
-ssl_keys_bucket = os.environ.get("SSL_KEYS_BUCKET")
+ssl_keys_bucket = os.environ["SSL_KEYS_BUCKET"]
 zapi = ZabbixAPI(url=os.environ.get("ZABBIX_SERVER", "https://localhost"),
-                 user=os.environ.get("ZABBIX_AUTOMATION_USER"),
-                 password=os.environ.get("ZABBIX_AUTOMATION_PASSWORD"))
+                 user=os.environ["ZABBIX_AUTOMATION_USER"],
+                 password=os.environ["ZABBIX_AUTOMATION_PASSWORD"])
 
 
 def main():
