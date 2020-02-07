@@ -86,7 +86,7 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
         f"""
             ansible {instance_to_run['private_ip']} -i {instance_to_run['private_ip']}, \
                 --user={user_to_run} \
-                --key-file={os.path.join(ssl_keys_directory, instance_to_run['key_pair'])}.pem \
+                --key-file={get_key_file(instance_to_run)} \
                 --extra-vars="zabbix_major_version={zabbix_major_version}" \
                 --module-name=import_role \
                 --args name=zabbix-agent
@@ -95,6 +95,10 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
         check=True,
         cwd=os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
     )
+
+
+def get_key_file(instance):
+    return f"{os.path.join(ssl_keys_directory, instance['key_pair'])}.pem "
 
 
 def get_ssl_keys():
@@ -135,7 +139,7 @@ def should_run_on_instance(instance, success_ec2_ids, update_all):
 def get_user_to_run(instance_to_run):
     try:
         subprocess.run(
-            f"ssh -q -i /tmp/{ssl_keys_directory}/{instance_to_run['key_pair']}.pem ubuntu@{instance_to_run['private_ip']} exit",
+            f"ssh -q -i {get_key_file(instance_to_run)} ubuntu@{instance_to_run['private_ip']} exit",
             check=True,
             shell=True
         )
