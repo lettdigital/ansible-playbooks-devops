@@ -6,6 +6,13 @@
   vars:
     zabbix_server: "{{ lookup('env', 'ZABBIX_SERVER') | regex_replace('^https://(.*)$', '\\1') }}"
 
+- name: create zabbix-agent agentd.d dir
+  file:
+    path: /var/log/zabbix
+    owner: zabbix
+    group: zabbix
+    state: directory
+
 - name: create zabbix log dir
   file:
     path: /var/log/zabbix/zabbix_agentd.log
