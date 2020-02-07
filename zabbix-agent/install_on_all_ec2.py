@@ -15,6 +15,9 @@ zapi = ZabbixAPI(url=os.environ.get("ZABBIX_SERVER", "https://localhost"),
                  user=os.environ["ZABBIX_AUTOMATION_USER"],
                  password=os.environ["ZABBIX_AUTOMATION_PASSWORD"])
 
+class InstallationError(Exception):
+    pass
+
 
 def main():
     pickle_filename = "success_ec2_ids.pkl"
@@ -40,6 +43,7 @@ def print_conclusion_message(errored_instances):
         print("the following instances installations errored !!!")
         for instance in errored_instances:
             print(f"{instance['name']}: {instance['id']}")
+        raise InstallationError(f"{len(errored_instances)} installations failed")
     else:
         print("all installations were successful!")
 
