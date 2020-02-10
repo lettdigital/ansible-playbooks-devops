@@ -3,17 +3,18 @@ import os
 import pickle
 import re
 import subprocess
+from tempfile import TemporaryDirectory
 
 import boto3
 from pyzabbix import ZabbixAPI
 
 ec2_client = boto3.client("ec2")
 s3_client = boto3.client("s3")
-ssl_keys_directory = os.environ.get("SSL_KEYS_DIRECTORY", "/tmp/keys")
 ssl_keys_bucket = os.environ["SSL_KEYS_BUCKET"]
 zapi = ZabbixAPI(url=os.environ.get("ZABBIX_SERVER", "https://localhost"),
                  user=os.environ["ZABBIX_AUTOMATION_USER"],
                  password=os.environ["ZABBIX_AUTOMATION_PASSWORD"])
+
 
 class InstallationError(Exception):
     pass
@@ -57,15 +58,16 @@ def get_zabbix_major_version():
 
 def install_zabbix_agent_on_instances(args, success_ec2_ids, zabbix_major_version):
     reservations = ec2_client.describe_instances()["Reservations"]
-    ssl_keys_directory = get_ssl_keys()
-    instances_to_run = get_instances_to_run(reservations, success_ec2_ids, args.update_all)
-    errored_instances = []
-    for instance_to_run in instances_to_run:
-        try:
-            install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbix_major_version)
-            success_ec2_ids.add(instance_to_run['id'])
-        except subprocess.CalledProcessError:
-            errored_instances.append(instance_to_run)
+    with TemporaryDirectory() as ssl_keys_directory:
+        get_ssl_keys(ssl_keys_directory)
+        instances_to_run = get_instances_to_run(reservations, success_ec2_ids, args.update_all)
+        errored_instances = []
+        for instance_to_run in instances_to_run:
+            try:
+                install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbix_major_version)
+                success_ec2_ids.add(instance_to_run['id'])
+            except subprocess.CalledProcessError:
+                errored_instances.append(instance_to_run)
     return errored_instances
 
 
@@ -90,7 +92,7 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
         f"""
             ansible {instance_to_run['private_ip']} -i {instance_to_run['private_ip']}, \
                 --user={user_to_run} \
-                --key-file={get_key_file(instance_to_run)} \
+                --key-file={get_key_file(instance_to_run, ssl_keys_directory)} \
                 --extra-vars="zabbix_major_version={zabbix_major_version}" \
                 --module-name=import_role \
                 --args name=zabbix-agent
@@ -101,12 +103,11 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
     )
 
 
-def get_key_file(instance):
+def get_key_file(instance, ssl_keys_directory):
     return f"{os.path.join(ssl_keys_directory, instance['key_pair'])}.pem "
 
 
-def get_ssl_keys():
-    os.makedirs(ssl_keys_directory, exist_ok=True)
+def get_ssl_keys(ssl_keys_directory):
     print("getting ssl keys...")
     subprocess.run(f"aws s3 sync s3://{ssl_keys_bucket} {ssl_keys_directory}",
                    shell=True,
@@ -114,7 +115,6 @@ def get_ssl_keys():
     subprocess.run(f"chmod 600 {os.path.join(ssl_keys_directory, '*')}",
                    shell=True,
                    check=True)
-    return ssl_keys_directory
 
 
 def get_instances_to_run(reservations, success_ec2_ids, update_all):
