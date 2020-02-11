@@ -50,5 +50,5 @@
   register: instance_name
 
 - set_fact:
-    instance_name: "{{ instance_name.stdout }}"
+    instance_name: "{{ instance_name.stdout if instance_name.stdout else 'nameless' }}"
 
