@@ -59,7 +59,7 @@ def get_zabbix_major_version():
 
 def install_zabbix_agent_on_instances(args, zabbix_major_version, ssl_keys_directory):
     pickle_filename = "success_ec2_ids.pkl"
-    success_ec2_ids = get_previous_successful_ec2_ids(pickle_filename)
+    success_ec2_ids = get_previously_successful_ec2_ids(pickle_filename)
     instances_to_run = get_instances_to_run(success_ec2_ids, args.update_all)
     errored_instances = []
     for instance_to_run in instances_to_run:
@@ -77,7 +77,7 @@ def save_successful_instance_ids(pickle_filename, success_ec2_ids):
         pickle.dump(success_ec2_ids, success_ec2_ids_pkl)
 
 
-def get_previous_successful_ec2_ids(pickle_filename):
+def get_previously_successful_ec2_ids(pickle_filename):
     if os.path.isfile(pickle_filename):
         with open(pickle_filename, "rb") as success_ec2_ids_pkl:
             success_ec2_ids = pickle.load(success_ec2_ids_pkl)
