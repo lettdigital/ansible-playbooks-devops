@@ -11,7 +11,7 @@ from pyzabbix import ZabbixAPI
 ec2_client = boto3.client("ec2")
 s3_client = boto3.client("s3")
 ssl_keys_bucket = os.environ["SSL_KEYS_BUCKET"]
-zapi = ZabbixAPI(url=os.environ.get("ZABBIX_SERVER", "https://localhost"),
+zapi = ZabbixAPI(url=os.environ.get("ZABBIX_SERVER", "http://localhost"),
                  user=os.environ["ZABBIX_AUTOMATION_USER"],
                  password=os.environ["ZABBIX_AUTOMATION_PASSWORD"])
 
@@ -31,6 +31,10 @@ def main():
     print_conclusion_message(errored_instances)
 
 
+def echo(msg):
+    subprocess.run(f"echo {msg}".split())
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--update-all",
@@ -42,12 +46,12 @@ def get_args():
 
 def print_conclusion_message(errored_instances):
     if errored_instances:
-        print("the following instances installations errored !!!")
+        echo("the following instances installations errored !!!")
         for instance in errored_instances:
-            print(f"{instance['name']}: {instance['id']}")
+            echo(f"{instance['name']}: {instance['id']}")
         raise InstallationError(f"{len(errored_instances)} installations failed")
     else:
-        print("all installations were successful!")
+        echo("all installations were successful!")
 
 
 def get_zabbix_major_version():
@@ -87,7 +91,7 @@ def get_previously_successful_ec2_ids(pickle_filename):
 
 
 def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbix_major_version):
-    print(f"installing zabbix-agent on {instance_to_run['name']}...")
+    echo(f"installing zabbix-agent on {instance_to_run['name']}...")
     user_to_run = get_user_to_run(instance_to_run, ssl_keys_directory)
     subprocess.run(
         f"""
@@ -109,7 +113,7 @@ def get_key_file(instance, ssl_keys_directory):
 
 
 def get_ssl_keys(ssl_keys_directory):
-    print("getting ssl keys...")
+    echo("getting ssl keys...")
     subprocess.run(f"aws s3 sync s3://{ssl_keys_bucket} {ssl_keys_directory}",
                    shell=True,
                    check=True)
@@ -119,7 +123,7 @@ def get_ssl_keys(ssl_keys_directory):
 
 
 def get_instances_to_run(success_ec2_ids, update_all):
-    print("getting instances to run...")
+    echo("getting instances to run...")
     reservations = ec2_client.describe_instances()["Reservations"]
     instances = (instance
                  for reservation in reservations
