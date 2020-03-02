@@ -55,7 +55,7 @@ def print_conclusion_message(errored_instances):
 
 
 def get_zabbix_major_version():
-    zabbix_major_version = (re.match("(\d+.\d+).\d+",
+    zabbix_major_version = (re.match(r"(\d+\.\d+)\.\d+",
                                      zapi.api_version())
                             .group(1))
     return zabbix_major_version
