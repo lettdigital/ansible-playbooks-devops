@@ -21,12 +21,13 @@ class InstallationError(Exception):
 
 
 def main():
-    pickle_filename = "success_ec2_ids.pkl"
     args = get_args()
     zabbix_major_version = get_zabbix_major_version()
-    success_ec2_ids = get_previous_successful_ec2_ids(pickle_filename)
-    errored_instances = install_zabbix_agent_on_instances(args, success_ec2_ids, zabbix_major_version)
-    save_successful_instance_ids(pickle_filename, success_ec2_ids)
+
+    with TemporaryDirectory() as ssl_keys_directory:
+        get_ssl_keys(ssl_keys_directory)
+        errored_instances = install_zabbix_agent_on_instances(args, zabbix_major_version, ssl_keys_directory)
+
     print_conclusion_message(errored_instances)
 
 
@@ -56,18 +57,18 @@ def get_zabbix_major_version():
     return zabbix_major_version
 
 
-def install_zabbix_agent_on_instances(args, success_ec2_ids, zabbix_major_version):
-    reservations = ec2_client.describe_instances()["Reservations"]
-    with TemporaryDirectory() as ssl_keys_directory:
-        get_ssl_keys(ssl_keys_directory)
-        instances_to_run = get_instances_to_run(reservations, success_ec2_ids, args.update_all)
-        errored_instances = []
-        for instance_to_run in instances_to_run:
-            try:
-                install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbix_major_version)
-                success_ec2_ids.add(instance_to_run['id'])
-            except subprocess.CalledProcessError:
-                errored_instances.append(instance_to_run)
+def install_zabbix_agent_on_instances(args, zabbix_major_version, ssl_keys_directory):
+    pickle_filename = "success_ec2_ids.pkl"
+    success_ec2_ids = get_previous_successful_ec2_ids(pickle_filename)
+    instances_to_run = get_instances_to_run(success_ec2_ids, args.update_all)
+    errored_instances = []
+    for instance_to_run in instances_to_run:
+        try:
+            install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbix_major_version)
+            success_ec2_ids.add(instance_to_run['id'])
+            save_successful_instance_ids(pickle_filename, success_ec2_ids)
+        except subprocess.CalledProcessError:
+            errored_instances.append(instance_to_run)
     return errored_instances
 
 
@@ -117,8 +118,9 @@ def get_ssl_keys(ssl_keys_directory):
                    check=True)
 
 
-def get_instances_to_run(reservations, success_ec2_ids, update_all):
+def get_instances_to_run(success_ec2_ids, update_all):
     print("getting instances to run...")
+    reservations = ec2_client.describe_instances()["Reservations"]
     instances = (instance
                  for reservation in reservations
                  for instance in reservation["Instances"]
