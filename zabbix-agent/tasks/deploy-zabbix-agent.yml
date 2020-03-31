@@ -4,7 +4,7 @@
     dest: /etc/zabbix/zabbix_agentd.conf
     owner: zabbix
   vars:
-    zabbix_server_domain_name: "{{ zabbix_server | regex_replace('^(https|http):\/\/(.*)$', '\\2') }}"
+    zabbix_server_domain_name: "{{ zabbix_server | regex_replace('^(https|http)://(.*)$', '\\2') }}"
 
 - name: create zabbix-agent log dir
   file:
