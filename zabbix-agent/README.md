@@ -21,7 +21,7 @@ Example
 ansible -v $HOST_PRIVATE_IP -i $HOST_PRIVATE_IP, \
   --user=$HOST_USER \
   --key-file=$HOST_PRIVATE_KEY \
-  --extra-vars="zabbix_major_version=$ZABBIX_MAJOR_VERSION" \
+  --extra-vars="zabbix_major_version=$ZABBIX_MAJOR_VERSION zabbix_server=$ZABBIX_SERVER" \
   --module-name=import_role --args name=zabbix-agent
 ```
 

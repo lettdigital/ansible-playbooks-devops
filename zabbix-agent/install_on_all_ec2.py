@@ -98,7 +98,7 @@ def install_zabbix_agent_with_ansible(instance_to_run, ssl_keys_directory, zabbi
             ansible {instance_to_run['private_ip']} -i {instance_to_run['private_ip']}, \
                 --user={user_to_run} \
                 --key-file={get_key_file(instance_to_run, ssl_keys_directory)} \
-                --extra-vars="zabbix_major_version={zabbix_major_version}" \
+                --extra-vars="zabbix_major_version={zabbix_major_version} zabbix_server={os.environ['ZABBIX_SERVER']}" \
                 --module-name=import_role \
                 --args name=zabbix-agent
             """,
