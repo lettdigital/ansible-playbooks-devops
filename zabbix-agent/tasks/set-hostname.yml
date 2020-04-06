@@ -10,4 +10,5 @@
     {
       echo '127.0.0.1 {{ hostname_to_change }}'
     } >> /etc/hosts
-    sort /etc/hosts | uniq > /etc/hosts
+    sort /etc/hosts | uniq > /tmp/hosts
+    mv /tmp/hosts /etc/hosts
