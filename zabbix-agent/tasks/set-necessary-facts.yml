@@ -52,3 +52,5 @@
 - set_fact:
     instance_name: "{{ instance_name.stdout if instance_name.stdout else 'nameless' }}"
 
+- set_fact:
+    zabbix_hostname: "{{ instance_name | replace('_', '') }}-{{ private_ip }}"
