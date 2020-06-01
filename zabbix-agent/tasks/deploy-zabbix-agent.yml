@@ -32,12 +32,13 @@
 - name: restart zabbix agent
   shell: |
     set -e
-    if [[ -f /etc/init.d/zabbix-agent ]];
+    service=$((pidof systemd &> /dev/null) && echo "systemd" || echo "other")
+    if [[ $service == "systemd" ]];
     then
-      /etc/init.d/zabbix-agent restart
-    else
       sudo systemctl enable zabbix-agent.service
       sudo systemctl restart zabbix-agent.service
+    else
+      /etc/init.d/zabbix-agent restart
     fi
   args:
     executable: /bin/bash
